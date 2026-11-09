@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Bose Acoustic Ear Care - 乾燥耳垢ケア音響振動ツール</title>
+
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="EarCare">
+  <meta name="theme-color" content="#0f141c">
+  <link rel="manifest" href="./manifest.json">
+
+  <style>
+    :root {
+      --bg-dark: #0f141c;
+      --card-bg: #18202c;
+      --card-border: #2a364a;
+      --accent: #38bdf8;
+      --accent-glow: rgba(56, 189, 248, 0.25);
+      --accent-secondary: #818cf8;
+      --success: #34d399;
+      --warning: #fbbf24;
+      --danger: #f87171;
+      --text-main: #f1f5f9;
+      --text-sub: #94a3b8;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Hiragino Sans', 'Meiryo', sans-serif;
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      line-height: 1.6;
+      padding: calc(16px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right)) calc(28px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left));
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--card-border);
+      padding-bottom: 14px;
+      margin-bottom: 18px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .title-group h1 {
+      font-size: 1.4rem;
+      font-weight: 700;
+      background: linear-gradient(90deg, var(--accent), var(--accent-secondary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .title-group p {
+      font-size: 0.84rem;
+      color: var(--text-sub);
+    }
+
+    .header-badges {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .badge-js-status {
+      background: rgba(248, 113, 113, 0.15);
+      border: 1px solid var(--danger);
+      color: var(--danger);
+      padding: 5px 12px;
+      border-radius: 999px;
+      font-size: 0.76rem;
+      font-weight: 700;
+    }
+
+    .badge-js-status.ok {
+      background: rgba(52, 211, 153, 0.15);
+      border-color: var(--success);
+      color: var(--success);
+    }
+
+    .badge-safety {
+      background: rgba(251, 191, 36, 0.12);
+      border: 1px solid rgba(251, 191, 36, 0.4);
+      color: var(--warning);
+      padding: 5px 12px;
+      border-radius: 999px;
+      font-size: 0.76rem;
+      font-weight: 600;
+    }
+
+    .safety-banner {
+      background: rgba(248, 113, 113, 0.08);
+      border-left: 4px solid var(--danger);
+      padding: 12px 14px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      font-size: 0.82rem;
+      color: #fca5a5;
+    }
+
+    .safety-banner strong {
+      color: var(--danger);
+    }
+
+    .grid-layout {
+      display: grid;
+      grid-template-columns: 1.25fr 1fr;
+      gap: 20px;
+    }
+
+    @media (max-width: 860px) {
+      .grid-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      padding: 18px;
+      margin-bottom: 18px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+    }
+
+    .card h2 {
+      font-size: 1.02rem;
+      margin-bottom: 14px;
+      color: var(--accent);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .visualizer-box {
+      position: relative;
+      background: #090d12;
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      height: 140px;
+      overflow: hidden;
+      margin-bottom: 18px;
+    }
+
+    canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .status-overlay {
+      position: absolute;
+      top: 10px;
+      left: 14px;
+      right: 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.8rem;
+      color: var(--text-sub);
+      pointer-events: none;
+    }
+
+    .freq-readout {
+      font-family: 'Consolas', monospace;
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .preset-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    @media (max-width: 520px) {
+      .preset-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .preset-btn {
+      background: #212c3d;
+      border: 1px solid var(--card-border);
+      color: var(--text-main);
+      padding: 12px;
+      border-radius: 10px;
+      cursor: pointer;
+      text-align: left;
+      transition: all 0.2s ease;
+    }
+
+    .preset-btn.active {
+      border-color: var(--accent);
+      background: rgba(56, 189, 248, 0.14);
+      box-shadow: 0 0 12px var(--accent-glow);
+    }
+
+    .preset-btn .p-title {
+      font-weight: 700;
+      font-size: 0.9rem;
+      display: block;
+      margin-bottom: 4px;
+      color: var(--accent);
+    }
+
+    .preset-btn .p-desc {
+      font-size: 0.76rem;
+      color: var(--text-sub);
+      line-height: 1.35;
+    }
+
+    .control-group {
+      margin-bottom: 16px;
+    }
+
+    .control-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.85rem;
+      margin-bottom: 8px;
+    }
+
+    .control-label span.val {
+      font-family: 'Consolas', monospace;
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      height: 28px;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+
+    .row-options {
+      display: flex;
+      gap: 8px;
+      margin-top: 6px;
+    }
+
+    .chip-btn {
+      flex: 1;
+      background: #212c3d;
+      border: 1px solid var(--card-border);
+      color: var(--text-main);
+      padding: 10px 8px;
+      border-radius: 8px;
+      font-size: 0.82rem;
+      cursor: pointer;
+    }
+
+    .chip-btn.active {
+      background: var(--accent);
+      color: #090d12;
+      border-color: var(--accent);
+      font-weight: 700;
+    }
+
+    .action-bar {
+      display: flex;
+      gap: 12px;
+      margin-top: 20px;
+    }
+
+    .btn-main {
+      flex: 2;
+      padding: 16px 14px;
+      border: none;
+      border-radius: 12px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .btn-start {
+      background: linear-gradient(135deg, #0ea5e9, #6366f1);
+      color: white;
+    }
+
+    .btn-stop {
+      background: var(--danger);
+      color: #090d12;
+    }
+
+    .timer-box {
+      flex: 1;
+      background: #090d12;
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 8px;
+    }
+
+    .timer-box .t-label {
+      font-size: 0.7rem;
+      color: var(--text-sub);
+    }
+
+    .timer-box .t-val {
+      font-family: 'Consolas', monospace;
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--success);
+    }
+
+    .evidence-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .evidence-item {
+      background: #131a24;
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 12px 14px;
+    }
+
+    .evidence-item h3 {
+      font-size: 0.88rem;
+      color: #e2e8f0;
+      margin-bottom: 4px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .evidence-item h3 span.hz-tag {
+      background: rgba(56, 189, 248, 0.15);
+      color: var(--accent);
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-family: monospace;
+      white-space: nowrap;
+    }
+
+    .evidence-item p {
+      font-size: 0.8rem;
+      color: var(--text-sub);
+    }
+
+    .step-list {
+      padding-left: 18px;
+      font-size: 0.82rem;
+      color: var(--text-sub);
+    }
+
+    .step-list li {
+      margin-bottom: 8px;
+    }
+
+    .step-list li strong {
+      color: var(--text-main);
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="title-group">
+      <h1>Bose Acoustic Ear Care Studio</h1>
+      <p>乾燥耳垢（カサカサ角質タイプ）向け・低周波空気圧ポンピング＆微細振動アシストツール</p>
+    </div>
+    <div class="header-badges">
+      <div class="badge-js-status" id="js-status-badge">⚠️ プレビュー画面（ボタン無効）</div>
+      <div class="badge-safety">安全リミッター搭載</div>
+    </div>
+  </header>
+
+  <div class="safety-banner">
+    <strong>【重要・安全上の注意】</strong>
+    音波だけで耳垢を瞬時に吹き飛ばすような大音量は<strong>鼓膜や内耳（聴覚）を傷つけるため絶対に行わないでください</strong>。
+    本アプリはBoseヘッドフォンの密閉性と低音ドライバーの物理振幅を活かし、<strong>「心地よい微細振動（タクタイル感）＋空気圧変動」</strong>によって、乾燥して浮きかけた角質片（耳垢）が顎の動きと合わせて自然剥離・移動するのを優しく補助するツールです。
+  </div>
+
+  <div class="grid-layout">
+    <div>
+      <div class="card">
+        <h2>1. 音響振動モード選択（エビデンスベースの4モード）</h2>
+        <div class="preset-grid">
+          <button type="button" class="preset-btn active" onclick="selectPreset('pumping')" id="preset-pumping">
+            <span class="p-title">① 重低音エアーポンピング (35 Hz)</span>
+            <span class="p-desc">Boseのドライバー振幅を最大化。イヤーカップ内の微細な空気圧変動で外耳道軟骨を優しく揺らします。</span>
+          </button>
+          <button type="button" class="preset-btn" onclick="selectPreset('shear')" id="preset-shear">
+            <span class="p-title">② 角質層せん断波パルス (80 Hz)</span>
+            <span class="p-desc">皮膚力学で角質層（Stratum Corneum）の表面せん断波が伝播しやすい60〜120Hz帯＋12Hzパルス変調。</span>
+          </button>
+          <button type="button" class="preset-btn" onclick="selectPreset('sweep')" id="preset-sweep">
+            <span class="p-title">③ 共振スイープ＆タッピング (40-165 Hz)</span>
+            <span class="p-desc">40Hz〜165Hzをゆっくり往復スイープ。耳介や外耳道の個人差のある微細共振ポイントを網羅します。</span>
+          </button>
+          <button type="button" class="preset-btn" onclick="selectPreset('check')" id="preset-check">
+            <span class="p-title">④ 外耳道共鳴チェック (2,500 Hz)</span>
+            <span class="p-desc">外耳道の固有共鳴周波数（小音量限定）。左右の耳に交互に流し、詰まり感や共鳴の差を確認します。</span>
+          </button>
+        </div>
+
+        <div class="visualizer-box">
+          <div class="status-overlay">
+            <span id="mode-status">待機中 (STOPPED)</span>
+            <span class="freq-readout" id="freq-display">35.0 Hz</span>
+          </div>
+          <canvas id="waveCanvas"></canvas>
+        </div>
+
+        <div class="control-group">
+          <div class="control-label">
+            <span>基本周波数 (Base Frequency)</span>
+            <span class="val" id="freq-val-label">35 Hz</span>
+          </div>
+          <input type="range" id="freq-slider" min="20" max="300" step="1" value="35" oninput="updateParams()">
+        </div>
+
+        <div class="control-group">
+          <div class="control-label">
+            <span>パルス変調・タッピング速度 (AM Pulse Rate)</span>
+            <span class="val" id="pulse-val-label">8.0 Hz (秒間8回振動)</span>
+          </div>
+          <input type="range" id="pulse-slider" min="0" max="25" step="0.5" value="8" oninput="updateParams()">
+        </div>
+
+        <div class="control-group">
+          <div class="control-label">
+            <span>出力ゲイン (安全リミッター付・まずは30%前後から)</span>
+            <span class="val" id="gain-val-label">35 %</span>
+          </div>
+          <input type="range" id="gain-slider" min="1" max="80" step="1" value="35" oninput="updateParams()">
+        </div>
+
+        <div class="control-group">
+          <div class="control-label">
+            <span>出力チャンネル (片耳集中で振動させる場合はLまたはR)</span>
+          </div>
+          <div class="row-options">
+            <button type="button" class="chip-btn" id="pan-left" onclick="setPan(-1)">左耳のみ (L)</button>
+            <button type="button" class="chip-btn active" id="pan-both" onclick="setPan(0)">両耳 (L + R)</button>
+            <button type="button" class="chip-btn" id="pan-right" onclick="setPan(1)">右耳のみ (R)</button>
+          </div>
+        </div>
+
+        <div class="control-group">
+          <div class="control-label">
+            <span>波形タイプ (サイン波＝滑らかな空気圧 / 三角波＝倍音タッピング感)</span>
+          </div>
+          <div class="row-options">
+            <button type="button" class="chip-btn active" id="wave-sine" onclick="setWave('sine')">サイン波 (Sine - 推奨)</button>
+            <button type="button" class="chip-btn" id="wave-triangle" onclick="setWave('triangle')">三角波 (Triangle - 振動感強め)</button>
+          </div>
+        </div>
+
+        <div class="action-bar">
+          <button type="button" class="btn-main btn-start" id="play-btn" onclick="togglePlay()">▶ セッション開始 (3分間)</button>
+          <div class="timer-box">
+            <span class="t-label">残り時間</span>
+            <span class="t-val" id="timer-display">03:00</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="card">
+        <h2>2. 周波数に関する科学的エビデンスと物理的根拠</h2>
+        <div class="evidence-list">
+          <div class="evidence-item">
+            <h3>
+              <span>① 粘液・分泌物クリアランスと空気圧振幅</span>
+              <span class="hz-tag">16 〜 45 Hz</span>
+            </h3>
+            <p>
+              呼吸器理学療法（Lung Flute等の音響クリアランス医療機器）では、<strong>16〜40Hzの低周波音波</strong>が分泌物や粘膜構造の機械的共振を引き起こし、せん断応力で付着物を剥がしやすくすることが実証されています。またBoseの密閉型イヤーカップでは、30〜45Hz付近で振動板（ダイヤフラム）の物理的な前後ストロークが最大となり、外耳道入り口に微細な空気圧ポンピング作用をもたらします。
+            </p>
+          </div>
+
+          <div class="evidence-item">
+            <h3>
+              <span>② 角質層（乾燥耳垢）の表面せん断波と剥離促進</span>
+              <span class="hz-tag">60 〜 200 Hz</span>
+            </h3>
+            <p>
+              皮膚生体力学（Skin Biophysics）の研究において、<strong>200Hz以下の低周波機械振動（特に60〜120Hz、および8〜20Hzのパルス変調）</strong>は、皮膚最外層の角質層（Stratum Corneum）に「表面せん断波（Surface Shear Waves）」を効率よく伝播させ、古い角質細胞（Corneocytes）の結合を緩めて自然剥離（Desquamation）を促すことが報告されています。乾燥タイプの耳垢は剥がれかけた角質片そのものであるため、この帯域の微細振動が最も合理的です。
+            </p>
+          </div>
+
+          <div class="evidence-item">
+            <h3>
+              <span>③ 小型スピーカー水抜き・筐体共振周波数</span>
+              <span class="hz-tag">100 〜 165 Hz</span>
+            </h3>
+            <p>
+              スマートウォッチ等の水抜き機能で使われる<strong>165Hz付近のパルス波</strong>は、小型ドライバーのエネルギー変換効率が高く、ヘッドフォンのイヤーパッド自体をブルブルと震わせる「接触型タクタイル振動」を耳介・外耳道軟骨へ伝えやすい帯域です。
+            </p>
+          </div>
+
+          <div class="evidence-item">
+            <h3>
+              <span>④ 外耳道固有共鳴周波数（※大音量厳禁）</span>
+              <span class="hz-tag">2,000 〜 3,500 Hz</span>
+            </h3>
+            <p>
+              人間の外耳道（長さ約2.5〜3cmの閉管）は物理的に<strong>2.5kHz〜3kHz付近</strong>で気柱共鳴を起こし、音圧が自然に+10〜15dB増幅されます。ただしこの帯域を大音量で鳴らすと内耳の有毛細胞を傷めるため、剥がす用途ではなく「小音量での左右の詰まり具合（共鳴）チェック」に使用します。
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>3. Boseヘッドフォンでの効果的な実践ステップ</h2>
+        <ol class="step-list">
+          <li>
+            <strong>Boseのノイズキャンセリング（ANC）をONにする：</strong>
+            ANCをオンにすることでイヤーカップ内の密閉度と低域のドライバ制御が最適化され、30〜100Hzの空気圧変動が逃げずに外耳道へ伝わります。
+          </li>
+          <li>
+            <strong>モード①または②を「心地よい微振動」の音量で3分間再生：</strong>
+            耳が痛くならない範囲（イヤーパッドが微かに震える程度）で再生します。
+          </li>
+          <li>
+            <strong>再生中に「あご（顎関節）」をゆっくり動かす（超重要）：</strong>
+            外耳道の皮膚は「鼓膜側から外側へ」動くベルトコンベアのような自浄作用を持っており、<strong>咀嚼（噛む動き）やあくびの動作</strong>で外耳道軟骨が動くことで乾燥耳垢が剥がれて外へ移動します。低周波振動を聴きながら、口を「あ・い・う・べ」とゆっくり開閉すると相乗効果が高まります。
+          </li>
+          <li>
+            <strong>終了後、頭を傾けて入り口付近だけを優しくケア：</strong>
+            浮き上がって外耳道の入り口付近まで出てきた乾燥耳垢のみを、軽く頭を傾けて落とすか、入り口の表面だけ優しく拭き取ります（※綿棒を奥まで入れると逆効果になるため入り口から1cm以内厳守）。
+          </li>
+        </ol>
+      </div>
+    </div>
+  </div>
+
+  <audio id="ios-unlock-audio" playsinline loop src="data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA"></audio>
+
+  <script>
+    if ('serviceWorker' in navigator && location.protocol === 'https:') {
+      navigator.serviceWorker.register('./sw.js').catch(function(){});
+    }
+    (function initStatus() {
+      var badge = document.getElementById('js-status-badge');
+      if (badge) {
+        badge.textContent = '🟢 動作準備OK (ボタン有効)';
+        badge.classList.add('ok');
+      }
+    })();
+
+    var audioCtx = null;
+    var mainOsc = null;
+    var modOsc = null;
+    var modGain = null;
+    var masterGain = null;
+    var leftGain = null;
+    var rightGain = null;
+    var merger = null;
+    var analyser = null;
+    var wakeLock = null;
+
+    var isPlaying = false;
+    var currentPreset = 'pumping';
+    var currentPan = 0;
+    var currentWave = 'sine';
+    var sweepInterval = null;
+    var sweepDirection = 1;
+    var timerInterval = null;
+    var remainingSeconds = 180;
+    var animationId = null;
+
+    var presets = {
+      pumping: { freq: 35, pulse: 8, gain: 35, wave: 'sine', minFreq: 20, maxFreq: 300, desc: '重低音エアーポンピング (35 Hz)' },
+      shear:   { freq: 80, pulse: 12, gain: 30, wave: 'triangle', minFreq: 20, maxFreq: 300, desc: '角質層せん断波パルス (80 Hz)' },
+      sweep:   { freq: 45, pulse: 10, gain: 30, wave: 'sine', minFreq: 20, maxFreq: 300, desc: '共振スイープ (40-165 Hz 自動往復)' },
+      check:   { freq: 2500, pulse: 2, gain: 10, wave: 'sine', minFreq: 500, maxFreq: 4000, desc: '外耳道共鳴チェック (2,500 Hz 小音量)' }
+    };
+
+    function selectPreset(name) {
+      currentPreset = name;
+      var btns = document.querySelectorAll('.preset-btn');
+      for (var i = 0; i < btns.length; i++) {
+        btns[i].classList.remove('active');
+      }
+      document.getElementById('preset-' + name).classList.add('active');
+
+      var p = presets[name];
+      var freqSlider = document.getElementById('freq-slider');
+      freqSlider.min = p.minFreq;
+      freqSlider.max = p.maxFreq;
+      freqSlider.value = p.freq;
+
+      document.getElementById('pulse-slider').value = p.pulse;
+      document.getElementById('gain-slider').value = p.gain;
+      setWave(p.wave);
+      updateParams();
+    }
+
+    function setPan(val) {
+      currentPan = val;
+      document.getElementById('pan-left').classList.toggle('active', val === -1);
+      document.getElementById('pan-both').classList.toggle('active', val === 0);
+      document.getElementById('pan-right').classList.toggle('active', val === 1);
+      applyChannelGains();
+    }
+
+    function applyChannelGains() {
+      if (leftGain && rightGain && audioCtx) {
+        var now = audioCtx.currentTime;
+        var lVal = (currentPan === 1) ? 0 : 1;
+        var rVal = (currentPan === -1) ? 0 : 1;
+        leftGain.gain.setTargetAtTime(lVal, now, 0.03);
+        rightGain.gain.setTargetAtTime(rVal, now, 0.03);
+      }
+    }
+
+    function setWave(type) {
+      currentWave = type;
+      document.getElementById('wave-sine').classList.toggle('active', type === 'sine');
+      document.getElementById('wave-triangle').classList.toggle('active', type === 'triangle');
+      if (mainOsc) {
+        mainOsc.type = currentWave;
+      }
+    }
+
+    function updateParams() {
+      var freq = parseFloat(document.getElementById('freq-slider').value);
+      var pulse = parseFloat(document.getElementById('pulse-slider').value);
+      var gainPct = parseFloat(document.getElementById('gain-slider').value);
+
+      if (freq > 500 && gainPct > 20) {
+        gainPct = 20;
+        document.getElementById('gain-slider').value = 20;
+      }
+
+      document.getElementById('freq-val-label').textContent = freq + ' Hz';
+      document.getElementById('freq-display').textContent = freq.toFixed(1) + ' Hz';
+      document.getElementById('pulse-val-label').textContent = pulse === 0 ? '連続波 (パルスなし)' : pulse.toFixed(1) + ' Hz (秒間' + pulse + '回振動)';
+      document.getElementById('gain-val-label').textContent = gainPct + ' %';
+
+      if (isPlaying && audioCtx) {
+        var now = audioCtx.currentTime;
+        mainOsc.frequency.setTargetAtTime(freq, now, 0.05);
+
+        var safeGain = (gainPct / 100) * 0.65;
+        if (pulse > 0) {
+          modOsc.frequency.setTargetAtTime(pulse, now, 0.05);
+          masterGain.gain.setTargetAtTime(safeGain * 0.5, now, 0.05);
+          modGain.gain.setTargetAtTime(safeGain * 0.5, now, 0.05);
+        } else {
+          masterGain.gain.setTargetAtTime(safeGain, now, 0.05);
+          modGain.gain.setTargetAtTime(0, now, 0.05);
+        }
+      }
+    }
+
+    function togglePlay() {
+      if (isPlaying) {
+        stopAudio();
+      } else {
+        startAudio();
+      }
+    }
+
+    function startAudio() {
+      if (navigator.audioSession) {
+        try { navigator.audioSession.type = 'playback'; } catch (e) {}
+      }
+
+      var unlockEl = document.getElementById('ios-unlock-audio');
+      if (unlockEl) {
+        unlockEl.play().catch(function(){});
+      }
+
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+
+      mainOsc = audioCtx.createOscillator();
+      modOsc = audioCtx.createOscillator();
+      modGain = audioCtx.createGain();
+      masterGain = audioCtx.createGain();
+
+      leftGain = audioCtx.createGain();
+      rightGain = audioCtx.createGain();
+      merger = audioCtx.createChannelMerger(2);
+
+      analyser = audioCtx.createAnalyser();
+      analyser.fftSize = 1024;
+
+      mainOsc.type = currentWave;
+      modOsc.type = 'sine';
+
+      mainOsc.connect(masterGain);
+      modOsc.connect(modGain);
+      modGain.connect(masterGain.gain);
+
+      masterGain.connect(leftGain);
+      masterGain.connect(rightGain);
+      leftGain.connect(merger, 0, 0);
+      rightGain.connect(merger, 0, 1);
+
+      merger.connect(analyser);
+      analyser.connect(audioCtx.destination);
+
+      applyChannelGains();
+      mainOsc.start();
+      modOsc.start();
+      isPlaying = true;
+
+      if ('wakeLock' in navigator) {
+        navigator.wakeLock.request('screen').then(function(wl) { wakeLock = wl; }).catch(function(){});
+      }
+
+      updateParams();
+
+      if (sweepInterval) clearInterval(sweepInterval);
+      sweepInterval = setInterval(function() {
+        if (!isPlaying || currentPreset !== 'sweep') return;
+        var slider = document.getElementById('freq-slider');
+        var f = parseFloat(slider.value);
+        f += sweepDirection * 1.5;
+        if (f >= 165) { f = 165; sweepDirection = -1; }
+        if (f <= 40)  { f = 40;  sweepDirection = 1; }
+        slider.value = f;
+        updateParams();
+      }, 100);
+
+      remainingSeconds = 180;
+      updateTimerDisplay();
+      if (timerInterval) clearInterval(timerInterval);
+      timerInterval = setInterval(function() {
+        remainingSeconds--;
+        updateTimerDisplay();
+        if (remainingSeconds <= 0) {
+          stopAudio();
+        }
+      }, 1000);
+
+      var playBtn = document.getElementById('play-btn');
+      playBtn.textContent = '■ 停止 (STOP)';
+      playBtn.classList.remove('btn-start');
+      playBtn.classList.add('btn-stop');
+      document.getElementById('mode-status').textContent = '再生中: ' + presets[currentPreset].desc;
+
+      drawVisualizer();
+    }
+
+    function stopAudio() {
+      isPlaying = false;
+      if (wakeLock) {
+        wakeLock.release().catch(function(){});
+        wakeLock = null;
+      }
+
+      var unlockEl = document.getElementById('ios-unlock-audio');
+      if (unlockEl) {
+        try { unlockEl.pause(); } catch (e) {}
+      }
+
+      if (mainOsc) {
+        try { mainOsc.stop(); mainOsc.disconnect(); } catch (e) {}
+        mainOsc = null;
+      }
+      if (modOsc) {
+        try { modOsc.stop(); modOsc.disconnect(); } catch (e) {}
+        modOsc = null;
+      }
+      if (sweepInterval) clearInterval(sweepInterval);
+      if (timerInterval) clearInterval(timerInterval);
+      if (animationId) cancelAnimationFrame(animationId);
+
+      var playBtn = document.getElementById('play-btn');
+      playBtn.textContent = '▶ セッション開始 (3分間)';
+      playBtn.classList.remove('btn-stop');
+      playBtn.classList.add('btn-start');
+      document.getElementById('mode-status').textContent = '待機中 (STOPPED)';
+    }
+
+    function updateTimerDisplay() {
+      var m = String(Math.floor(remainingSeconds / 60)).padStart(2, '0');
+      var s = String(remainingSeconds % 60).padStart(2, '0');
+      document.getElementById('timer-display').textContent = m + ':' + s;
+    }
+
+    function drawVisualizer() {
+      var canvas = document.getElementById('waveCanvas');
+      var ctx = canvas.getContext('2d');
+      canvas.width = canvas.clientWidth;
+      canvas.height = canvas.clientHeight;
+
+      var bufferLength = analyser.frequencyBinCount;
+      var dataArray = new Uint8Array(bufferLength);
+
+      function render() {
+        if (!isPlaying) return;
+        animationId = requestAnimationFrame(render);
+
+        analyser.getByteTimeDomainData(dataArray);
+
+        ctx.fillStyle = '#090d12';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        ctx.lineWidth = 2.5;
+        ctx.strokeStyle = '#38bdf8';
+        ctx.beginPath();
+
+        var sliceWidth = canvas.width * 1.0 / bufferLength;
+        var x = 0;
+
+        for (var i = 0; i < bufferLength; i++) {
+          var v = dataArray[i] / 128.0;
+          var y = v * canvas.height / 2;
+
+          if (i === 0) {
+            ctx.moveTo(x, y);
+          } else {
+            ctx.lineTo(x, y);
+          }
+          x += sliceWidth;
+        }
+
+        ctx.lineTo(canvas.width, canvas.height / 2);
+        ctx.stroke();
+      }
+      render();
+    }
+  </script>
+</body>
+</html>
